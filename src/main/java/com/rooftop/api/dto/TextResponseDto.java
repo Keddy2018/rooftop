@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TextPostGetDto {
+public class TextResponseDto {
     
     private Long id;
     

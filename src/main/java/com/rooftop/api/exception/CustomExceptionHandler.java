@@ -2,6 +2,7 @@ package com.rooftop.api.exception;
 
 import com.rooftop.api.dto.FormatErrorDto;
 import static com.rooftop.api.util.Constants.TEXT_NOT_CONTROLLED;
+import java.security.NoSuchAlgorithmException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,8 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler({Exception.class,
-        MethodArgumentTypeMismatchException.class})
+        MethodArgumentTypeMismatchException.class,
+        NoSuchAlgorithmException.class})
     private ResponseEntity<Object> notControlledException(Exception ex) {
         return createFormatExcpetion(new NotControlledExeption(TEXT_NOT_CONTROLLED), HttpStatus.UNPROCESSABLE_ENTITY);
     }

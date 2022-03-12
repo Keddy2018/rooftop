@@ -8,14 +8,16 @@ import com.rooftop.api.exception.NotExistRecordExeption;
 import com.rooftop.api.mapped.TextMapped;
 import com.rooftop.api.model.Text;
 import com.rooftop.api.repository.TextRepository;
-import static com.rooftop.api.util.Constants.REQ_MAPP_CLASS;
-import static com.rooftop.api.util.Constants.TEXT_NOT_CONTROLLED;
-import static com.rooftop.api.util.Constants.TEXT_NOT_FOUND;
+import static com.rooftop.api.util.Constants.*;
 import com.rooftop.api.util.Md5Convert;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,22 +29,21 @@ public class TextServiceImpl implements TextService {
     @Autowired
     private TextMapped textMapped;
 
-    private HashMap<String, Integer> mapa;
-    
+    private LinkedHashMap<String, Integer> mapa;
 
     private void decodeText(String text, int chars) {
-        mapa = new HashMap();
+        mapa = new LinkedHashMap();
         text = text.toLowerCase();
 
         if (chars < 2) {
-            chars = 2;
+            chars = DEFAULT_CHARS;
         }
         if (chars >= text.length()) {
             mapa.put(text, 1);
 
         } else {
             for (int i = 0; i < text.length() - 1; i++) {
-                if ((chars + i) > text.length() - 1) {
+                if ((chars + i) > text.length()) {
                     break;
                 }
                 String subText = text.substring(i, (i + chars));
@@ -66,9 +67,9 @@ public class TextServiceImpl implements TextService {
         }
         return cont;
     }
-    
-    private void validNotNullId(Long id){
-        if(id == null){
+
+    private void validNotNullId(Long id) {
+        if (id == null) {
             throw new NotControlledExeption(TEXT_NOT_CONTROLLED);
         }
     }
@@ -77,8 +78,11 @@ public class TextServiceImpl implements TextService {
     public Object addText(TextAddDto textAddDto) {
         try {
             String url = REQ_MAPP_CLASS + "/";
-            Long id = 0L;
+            Long id;
             int chars = textAddDto.getChars();
+            if (chars < 2) {
+                chars = DEFAULT_CHARS;
+            }
             decodeText(textAddDto.getText(), textAddDto.getChars());
             String hashCode = Md5Convert.getMd5(mapa.toString(), chars);
             Optional<Text> textBd = textRepo.findByHashCode(hashCode);
@@ -87,7 +91,7 @@ public class TextServiceImpl implements TextService {
                 id = textBd.get().getId();
             } else {
                 Text text = new Text();
-                text.setMapa(mapa);
+                text.setResult(textMapped.string2LinkedHashMap(mapa));
                 text.setChars(chars);
                 text.setHashCode(hashCode);
                 text.setIsActive(Boolean.TRUE);
@@ -137,4 +141,29 @@ public class TextServiceImpl implements TextService {
             throw new NotExistRecordExeption(TEXT_NOT_FOUND);
         }
     }
+
+    @Override
+    public List<TextResponseAllDto> getTextPageable(HashMap<String, String> map) {
+        int chars = DEFAULT_CHARS;
+        int page = DEFAULT_PAGE;
+        int rpp = DEFAULT_RPP;
+
+        if (map.containsKey("chars")) {
+            int charsPet = Integer.valueOf(map.get("chars"));
+            chars = charsPet < 2 ? DEFAULT_CHARS : charsPet;
+        }
+        if (map.containsKey("page")) {
+            int pagePet = Integer.valueOf(map.get("page"));
+            page = pagePet <= 1 ? 0 : pagePet - 1;
+        }
+        if (map.containsKey("rpp")) {
+            int rppPet = Integer.valueOf(map.get("rpp"));
+            rpp = rppPet < 10 ? 10 : rppPet > 100 ? 100 : rppPet;
+        }
+        Pageable pageable = PageRequest.of(page, rpp);
+        Optional<List<Text>> optionalList = textRepo.findByChars(chars, pageable);
+        return textMapped.listTextResponseAllDto2ListText(optionalList.get());
+
+    }
+
 }

@@ -1,7 +1,5 @@
 package com.rooftop.api.model;
 
-import java.util.Map;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -17,8 +15,7 @@ public class Text {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @ElementCollection
-    private Map<String, Integer> mapa;
+    private String result;
     
     private String hashCode;
     

@@ -1,3 +1,3 @@
 # rooftop
-El proyecto esta realisado en java utiliaando Spring Boot.
+El proyecto esta realizado en java utilizando el Framework de Spring Boot.
 Se agrega el ejecutable jar.
